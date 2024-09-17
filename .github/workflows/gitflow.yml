@@ -31,33 +31,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Install GitHub CLI
         run: brew install gh
-      - name: Update pull request title
-        run: |
-          # Extract the version from the output of the gitflow action
-          VERSION=$(echo "${{ steps.gitflow_release.outputs.version }}" | sed 's/^v//')
-
-          # Get the current pull request number associated with the branch
-          PR_NUMBER=$(gh pr list --base production --head $(git rev-parse --abbrev-ref HEAD) --json number --jq '.[0].number')
-
-          # Update the pull request title
-          gh pr edit $PR_NUMBER --title "[Release] - $VERSION"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Rename release branch
-        run: |
-          # Extract the version from the output of the gitflow action
-          VERSION=$(echo "${{ steps.gitflow.outputs.version }}" | sed 's/^v//')
-          OLD_BRANCH_NAME="${{ steps.gitflow.outputs.release_branch }}"
-          NEW_BRANCH_NAME="release/$VERSION"
-        
-          # Check if the branch exists and rename it
-          if git show-ref --verify --quiet refs/heads/$OLD_BRANCH_NAME; then
-            echo "Renaming branch $OLD_BRANCH_NAME to $NEW_BRANCH_NAME"
-            git branch -m $OLD_BRANCH_NAME $NEW_BRANCH_NAME
-            git push origin $NEW_BRANCH_NAME
-            git push origin --delete $OLD_BRANCH_NAME
-          else
-            echo "Branch $OLD_BRANCH_NAME does not exist. Skipping renaming."
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+     
