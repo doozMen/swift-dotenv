@@ -92,13 +92,13 @@ public enum Dotenv {
     // MARK: - Configuration
 
     /// `FileManager` instance used to load and save configuration files. Can be replaced with a custom instance.
-    public static var fileManager = FileManager.default
+    nonisolated(unsafe) public static var fileManager = FileManager.default
 
     /// Delimeter for key value pairs, defaults to `=`.
-    public static var delimeter: Character = "="
+    nonisolated(unsafe) public static var delimeter: Character = "="
 
     /// Process info instance.
-    public static var processInfo: ProcessInfo = ProcessInfo.processInfo
+    nonisolated(unsafe) public static var processInfo: ProcessInfo = ProcessInfo.processInfo
 
     /// Configure the environment with environment values loaded from the environment file.
     /// - Parameters:
