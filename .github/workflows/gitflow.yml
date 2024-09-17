@@ -29,6 +29,4 @@ jobs:
           version_increment: ${{ inputs.version_increment }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install GitHub CLI
-        run: brew install gh
      
