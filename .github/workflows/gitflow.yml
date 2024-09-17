@@ -45,7 +45,7 @@ jobs:
       - name: Rename release branch
         run: |
           # Extract the version from the output of the gitflow action
-          VERSION=$(echo "${{ steps.gitflow_release.outputs.next_version }}" | sed 's/^v//')
+          VERSION=$(echo "${{ steps.gitflow_release.outputs.version }}" | sed 's/^v//')
 
           NEW_BRANCH_NAME="release/$VERSION"
         
