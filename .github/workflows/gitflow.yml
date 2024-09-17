@@ -1,4 +1,4 @@
-name: Gitflow
+name: Gitflow Release
 
 on:
   workflow_dispatch:
@@ -18,11 +18,44 @@ jobs:
     name: Gitflow Release
     runs-on: macos-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Gitflow Genius Action
-        uses: ./
+      - name: Get latest tag 
+        id: get_latest_tag
+        run: |
+          latest_tag=$(git describe --tags --abbrev=0)
+          echo "Found latest tag: $latest_tag"
+          echo "::set-output name=tag::$latest_tag"
+      - name: Increment version
+        id: increment_version
+        run: |
+          version=${{ steps.get_latest_tag.outputs.tag }}
+          echo "Version before increment: $version"
+          # Remove leading 'v' if present
+          version="${version#v}"
+          
+          # Split the version into components
+          IFS='.' read -r major minor patch <<< "$version"
+
+          # Increment based on inputs
+          if [ "${{ github.event.inputs.major }}" = "true" ]; then
+            major=$((major + 1))
+            minor=0
+            patch=0
+          elif [ "${{ github.event.inputs.minor }}" = "true" ]; then
+            minor=$((minor + 1))
+            patch=0
+          elif [ "${{ github.event.inputs.patch }}" = "true" ]; then
+            patch=$((patch + 1))
+          fi
+          # Construct the new version
+          new_version="$major.$minor.$patch"
+          echo "New version: $new_version"
+          echo "::set-output name=new_version::$new_version"
+      - name: gitflow-workflow-action release workflows
+        uses: hoangvvo/gitflow-workflow-action@0.3.7
         with:
-          version_increment: ${{ inputs.version_increment }}
+          develop_branch: "develop"
+          main_branch: "production"
+          merge_back_from_main: true
+          version: ${{ steps.increment_version.outputs.increment_version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
