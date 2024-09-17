@@ -1,4 +1,8 @@
+#if os(Linux)
+import Glibc
+#else
 import Darwin
+#endif
 import Foundation
 
 /// Structure used to load and save environment files.
@@ -164,7 +168,7 @@ public enum Dotenv {
     ///   - key: Key to set the value with.
     ///   - overwrite: Flag that indicates if any existing value should be overwritten, defaults to `true`.
     public static func set(value: String?, forKey key: String, overwrite: Bool = true) {
-        setenv(key, value, overwrite ? 1 : 0)
+        setenv(key, value ?? "", overwrite ? 1 : 0)
     }
 
     // MARK: - Subscripting
