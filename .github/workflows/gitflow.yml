@@ -1,3 +1,5 @@
+name: Gitflow
+
 on:
   workflow_dispatch:
     inputs:
