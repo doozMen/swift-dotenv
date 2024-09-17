@@ -20,6 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: gitflow-workflow-action release workflows
+        id: gitflow
         uses: hoangvvo/gitflow-workflow-action@0.3.7
         with:
           develop_branch: "develop"
@@ -45,19 +46,18 @@ jobs:
       - name: Rename release branch
         run: |
           # Extract the version from the output of the gitflow action
-          VERSION=$(echo "${{ steps.gitflow_release.outputs.version }}" | sed 's/^v//')
-          echo VERSION
+          VERSION=$(echo "${{ steps.gitflow.outputs.version }}" | sed 's/^v//')
+          OLD_BRANCH_NAME = ${{ steps.gitflow.outputs.release_branch }}
           NEW_BRANCH_NAME="release/$VERSION"
         
-          # Rename the branch locally
-          git branch -m $NEW_BRANCH_NAME
-        
-          # Push the renamed branch to remote
-          git push origin $NEW_BRANCH_NAME
-
-          # Delete the old branch from remote
-          git push origin --delete $(git rev-parse --abbrev-ref @{-1})
-
-          echo "Branch renamed to $NEW_BRANCH_NAME"
+          # Check if the branch exists and rename it
+          if git show-ref --verify --quiet refs/heads/$OLD_BRANCH_NAME; then
+            echo "Renaming branch $OLD_BRANCH_NAME to $NEW_BRANCH_NAME"
+            git branch -m $OLD_BRANCH_NAME $NEW_BRANCH_NAME
+            git push origin $NEW_BRANCH_NAME
+            git push origin --delete $OLD_BRANCH_NAME
+          else
+            echo "Branch $OLD_BRANCH_NAME does not exist. Skipping renaming."
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
