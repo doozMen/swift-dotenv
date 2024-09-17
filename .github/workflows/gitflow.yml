@@ -29,4 +29,17 @@ jobs:
           version_increment: ${{ inputs.version_increment }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-     
+      - name: Install GitHub CLI
+        run: brew install gh
+      - name: Update pull request title
+        run: |
+          # Extract the version from the output of the gitflow action
+          VERSION=$(echo "${{ steps.gitflow.outputs.version }}" | sed 's/^v//')
+          BRANCH_NAME="release/${{ steps.gitflow.outputs.release_branch }}"
+    
+          # Get the PR number for the given branch
+          PR_NUMBER=$(gh pr list --head $BRANCH_NAME --json number --jq '.[0].number')
+          # Update the pull request title
+          gh pr edit $PR_NUMBER --title "[Release] - $VERSION"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
