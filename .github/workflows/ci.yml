@@ -8,6 +8,8 @@ on:
     branches: [ "develop", "production" ]
   pull_request:
     branches: [ "develop", "production" ]
+  schedule:
+    - cron: 0 0 * * * #trigger once a day, according to the cron syntax
 
 jobs:
   build:
