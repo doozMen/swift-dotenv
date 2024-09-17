@@ -25,7 +25,7 @@ jobs:
           develop_branch: "develop"
           main_branch: "production"
           merge_back_from_main: true
-          version_increment: ${{ increments.version_increment }}
+          version_increment: ${{ inputs.version_increment }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Install GitHub CLI
