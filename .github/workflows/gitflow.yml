@@ -35,6 +35,7 @@ jobs:
       - name: Install GitHub CLI
         run: brew install gh
       - name: Update pull request title
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           PR_NUMBER="${{ steps.gitflow.outputs.pull_number }}"
           VERSION=$(echo "${{ steps.gitflow.outputs.version }}" | sed 's/^v//')
