@@ -12,6 +12,9 @@ on:
           - "major"
           - "minor"
           - "patch"
+  pull_request:
+    types:
+      - closed
 
 jobs:
   gitflow-release:
