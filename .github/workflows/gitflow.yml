@@ -19,46 +19,45 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-            fetch-depth: 0
-      - name: Get latest tag 
-        id: get_latest_tag
-        run: |
-          latest_tag=$(git describe --tags --abbrev=0)
-          echo "Found latest tag: $latest_tag"
-          echo "::set-output name=tag::$latest_tag"
-      - name: Increment version
-        id: increment_version
-        run: |
-          version=${{ steps.get_latest_tag.outputs.tag }}
-          echo "Version before increment: $version"
-          # Remove leading 'v' if present
-          version="${version#v}"
-          
-          # Split the version into components
-          IFS='.' read -r major minor patch <<< "$version"
-
-          # Increment based on inputs
-          if [ "${{ github.event.inputs.major }}" = "true" ]; then
-            major=$((major + 1))
-            minor=0
-            patch=0
-          elif [ "${{ github.event.inputs.minor }}" = "true" ]; then
-            minor=$((minor + 1))
-            patch=0
-          elif [ "${{ github.event.inputs.patch }}" = "true" ]; then
-            patch=$((patch + 1))
-          fi
-          # Construct the new version
-          new_version="$major.$minor.$patch"
-          echo "New version: $new_version"
-          echo "::set-output name=new_version::$new_version"
       - name: gitflow-workflow-action release workflows
         uses: hoangvvo/gitflow-workflow-action@0.3.7
         with:
           develop_branch: "develop"
           main_branch: "production"
           merge_back_from_main: true
-          version: ${{ steps.increment_version.outputs.increment_version }}
+          version_increment: ${{ increments.version_increment }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install GitHub CLI
+        run: brew install gh
+      - name: Update pull request title
+        run: |
+          # Extract the version from the output of the gitflow action
+          VERSION=$(echo "${{ steps.gitflow_release.outputs.version }}" | sed 's/^v//')
+
+          # Get the current pull request number associated with the branch
+          PR_NUMBER=$(gh pr list --base production --head $(git rev-parse --abbrev-ref HEAD) --json number --jq '.[0].number')
+
+          # Update the pull request title
+          gh pr edit $PR_NUMBER --title "[Release] - $VERSION"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Rename release branch
+        run: |
+          # Extract the version from the output of the gitflow action
+          VERSION=$(echo "${{ steps.gitflow_release.outputs.next_version }}" | sed 's/^v//')
+
+          NEW_BRANCH_NAME="release/$VERSION"
+        
+          # Rename the branch locally
+          git branch -m $NEW_BRANCH_NAME
+        
+          # Push the renamed branch to remote
+          git push origin $NEW_BRANCH_NAME
+
+          # Delete the old branch from remote
+          git push origin --delete $(git rev-parse --abbrev-ref @{-1})
+
+          echo "Branch renamed to $NEW_BRANCH_NAME"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
