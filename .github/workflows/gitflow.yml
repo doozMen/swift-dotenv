@@ -1,0 +1,26 @@
+on:
+  workflow_dispatch:
+    inputs:
+      version_increment:
+        type: choice
+        required: true
+        description: "Version increment"
+        default: "patch"
+        options:
+          - "major"
+          - "minor"
+          - "patch"
+
+jobs:
+  gitflow-release:
+    name: Gitflow Release
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Gitflow Genius Action
+        uses: ./
+        with:
+          version_increment: ${{ inputs.version_increment }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
