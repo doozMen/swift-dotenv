@@ -4,13 +4,17 @@ A one-stop shop for working with environment values in a Swift program.
 
 ## Overview
 
-`SwiftDotenv` is a small and compact Swift package that allows you to load and save `.env` files at runtime and query for those values as well as system provided environemntal values via `ProcessInfo`. It's a single abstraction for dealing with environment variables at runtime in a local configuration file that doesn't get committed to version control, rather than hardcoding strings into your app or framework.
+`SwiftDotenv` is a small and compact Swift scripting library that allows you to load and save `.env` files at runtime and query for those values as well as system provided environemntal values via `ProcessInfo`. It's a single abstraction for dealing with environment variables at runtime in a local configuration file that doesn't get committed to version control, rather than hardcoding strings into your app or framework.
 
 **IMPORTANT**: Please note that storing secrets or other sensitive information in the `.env` file does not necessarily make your app secure. For more information, see [this great article from NSHipster](https://nshipster.com/secrets/).
 
 ### What is a `.env` file?
 
 `.env` files are used, most often in server-side applications, to inject environment variables into an application during active development. They can contain api keys, secrets, and other sensitive information and therefore **should not be committed to version control**. An environment file should only exist locally on a development machine; on a continuous integration system like TravisCI or CircleCI, environment variables are added via the respective UI in lieu of a `.env` file.
+
+### When should I use this library?
+
+`SwiftDotenv` is primarily meant for _scripting use-cases only_, not within applications. This is because in order to access the `.env` file from your application, it would have to be included and bundled with your application which defeats the purpose of keeping them separate to start with. You can however still use `Dotenv` as a Swiftier way of interacting with the system environment variables which will just proxy to `processInfo.environment`. 
 
 ## Installation
 
@@ -19,6 +23,8 @@ A one-stop shop for working with environment values in a Swift program.
 ```swift
 .package(url: "https://github.com/thebarndog/swift-dotenv.git", .upToNextMajor("2.0.0"))
 ```
+
+You can also use solutions such as [`swift-sh`](https://github.com/mxcl/swift-sh) for a less cumbersome scripting setup.
 
 ## Usage
 
