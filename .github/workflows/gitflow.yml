@@ -39,6 +39,7 @@ jobs:
     
           # Get the PR number for the given branch
           PR_NUMBER=$(gh pr list --head $BRANCH_NAME --json number --jq '.[0].number')
+          echo "Pull request number: $PR_NUMBER"
           # Update the pull request title
           gh pr edit $PR_NUMBER --title "[Release] - $VERSION"
         env:
