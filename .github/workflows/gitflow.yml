@@ -1,4 +1,4 @@
-name: Gitflow
+name: Gitflow Release
 
 on:
   workflow_dispatch:
@@ -18,11 +18,23 @@ jobs:
     name: Gitflow Release
     runs-on: macos-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Gitflow Genius Action
-        uses: ./
+      - uses: actions/checkout@v4
+      - name: gitflow-workflow-action release workflows
+        id: gitflow
+        uses: hoangvvo/gitflow-workflow-action@0.3.7
         with:
+          develop_branch: "develop"
+          main_branch: "production"
+          merge_back_from_main: true
           version_increment: ${{ inputs.version_increment }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install GitHub CLI
+        run: brew install gh
+      - name: Update pull request title
+        run: |
+          PR_NUMBER="${{ steps.gitflow.outputs.pull_number }}"
+          VERSION=$(echo "${{ steps.gitflow.outputs.version }}" | sed 's/^v//')
+          gh pr edit $PR_NUMBER --title "[Release] - $VERSION"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
