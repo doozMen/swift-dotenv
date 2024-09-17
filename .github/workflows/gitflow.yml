@@ -47,7 +47,7 @@ jobs:
         run: |
           # Extract the version from the output of the gitflow action
           VERSION=$(echo "${{ steps.gitflow.outputs.version }}" | sed 's/^v//')
-          OLD_BRANCH_NAME = ${{ steps.gitflow.outputs.release_branch }}
+          OLD_BRANCH_NAME="${{ steps.gitflow.outputs.release_branch }}"
           NEW_BRANCH_NAME="release/$VERSION"
         
           # Check if the branch exists and rename it
