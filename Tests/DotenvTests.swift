@@ -1,78 +1,66 @@
-//
-//  DotenvTests.swift
-//  SwiftDotenvTests
-//
-//  Created by Brendan Conron on 10/17/21.
-//
-
+import Foundation
 import SwiftDotenv
-import XCTest
+import Testing
 
-final class DotenvTests: XCTestCase {
+extension Issue: Swift.Error {}
 
-    private static var temporarySaveLocation: String {
-        "\(NSTemporaryDirectory())swift-dotenv/"
+@Suite struct DotenvTests {
+
+  let dotenv: Dotenv
+
+  private static var temporarySaveLocation: String {
+    "\(NSTemporaryDirectory())swift-dotenv/"
+  }
+
+  init() throws {
+    try FileManager.default.createDirectory(
+      at: URL(fileURLWithPath: Self.temporarySaveLocation),
+      withIntermediateDirectories: true, attributes: nil
+    )
+    guard let path = Bundle.module.path(forResource: "fixture", ofType: "env") else {
+      throw Issue.record("unable to find env file")
     }
 
-    override func setUpWithError() throws {
-        try FileManager.default.createDirectory(
-            at: URL(fileURLWithPath: Self.temporarySaveLocation),
-            withIntermediateDirectories: true, attributes: nil
-        )
-        guard let path = Bundle.module.path(forResource: "fixture", ofType: "env") else {
-            XCTFail("unable to find env file")
-            return
-        }
+    dotenv = try Dotenv(path: path)
+  }
 
-        try Dotenv.configure(atPath: path)
+  @Test func configuringEnvironment() throws {
+    #expect(dotenv.apiKey == .string("some-value"))
+    #expect(dotenv.buildNumber == .integer(5))
+    #expect(dotenv.identifier == .string("com.app.example"))
+    #expect(dotenv.mailTemplate == .string("The \"Quoted\" Title"))
+    #expect(dotenv.dbPassphrase == .string("1qaz?#@\"' wsx$"))
+    #expect(dotenv.nonExistentValue == nil)
+  }
 
-    }
+  @Test func subscriptingByStrings() throws {
+    // implicitly testing string subscripting
+    #expect(dotenv[dynamicMember: "API_KEY"] == .string("some-value"))
+    #expect(dotenv[dynamicMember: "BUILD_NUMBER"] == .integer(5))
+    #expect(dotenv[dynamicMember: "IDENTIFIER"] == .string("com.app.example"))
+  }
 
-    override func tearDownWithError() throws {
-        if FileManager.default.fileExists(atPath: Self.temporarySaveLocation) {
-            try FileManager.default.removeItem(at: URL(fileURLWithPath: Self.temporarySaveLocation))
-        }
-    }
+  @Test func subscriptingNonexistantValue() {
+    #expect(dotenv.randomVariable == nil)
+  }
 
-    func testConfiguringEnvironment() throws {
-        XCTAssertEqual(Dotenv.apiKey, .string("some-value"))
-        XCTAssertEqual(Dotenv.buildNumber, .integer(5))
-        XCTAssertEqual(Dotenv.identifier, .string("com.app.example"))
-        XCTAssertEqual(Dotenv.mailTemplate, .string("The \"Quoted\" Title"))
-        XCTAssertEqual(Dotenv.dbPassphrase, .string("1qaz?#@\"' wsx$"))
-        XCTAssertNil(Dotenv.nonExistentValue)
-    }
+  @Test func settingValues() {
+    var dotenv = self.dotenv
+    dotenv.apiKey = .integer(1234)
 
-    func testSubscriptingByStrings() throws {
-        // implicitly testing string subscripting
-        XCTAssertEqual(Dotenv["API_KEY"], .string("some-value"))
-        XCTAssertEqual(Dotenv["BUILD_NUMBER"], .integer(5))
-        XCTAssertEqual(Dotenv["IDENTIFIER"], .string("com.app.example"))
-    }
+    #expect(dotenv.apiKey == .integer(1234))
+    let process = dotenv.createProcessWithDotenv()
+    #expect(process.environment?["API_KEY"] == "1234")
+  }
 
-    func testSubscriptingNonexistantValue() {
-        XCTAssertNil(Dotenv.randomVariable)
-    }
+  @Test func overridingValues() {
+    var dotenv = self.dotenv
+    dotenv.apiKey = .integer(1234)
 
-    func testSettingValues() {
-        Dotenv.set(value: "1234", forKey: "API_KEY")
+    #expect(dotenv.apiKey == .integer(1234))
 
-        XCTAssertEqual(Dotenv.apiKey, .integer(1234))
-        XCTAssertEqual(Dotenv.processInfo.environment["API_KEY"], "1234")
-    }
+    dotenv.secretKey = dotenv.apiKey
 
-    func testOverridingValues() {
-        setenv("API_KEY", "1234", 1)
-
-        XCTAssertEqual(Dotenv.processInfo.environment["API_KEY"], "1234")
-
-        Dotenv.set(value: "secret-key", forKey: "API_KEY", overwrite: true)
-
-        XCTAssertEqual(Dotenv.processInfo.environment["API_KEY"], "secret-key")
-
-        Dotenv.set(value: "super-secret-key", forKey: "API_KEY", overwrite: false)
-
-        XCTAssertEqual(Dotenv.processInfo.environment["API_KEY"], "secret-key")
-    }
+    #expect(dotenv.secretKey == dotenv.apiKey)
+  }
 }
-
